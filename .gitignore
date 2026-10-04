@@ -1,0 +1,6 @@
+build-debug/
+build/
+.vs/
+out/
+*.spv
+*.user
