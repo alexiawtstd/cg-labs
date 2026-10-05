@@ -10,6 +10,5 @@ layout(std140, set = 0, binding = 0) uniform ObjectUniforms {
 } object;
 
 void main() {
-    // Цвет вершин (интерполированный) умножаем на цвет из интерфейса
     out_color = vec4(in_color, 1.0) * object.color;
 }
