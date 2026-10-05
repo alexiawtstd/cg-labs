@@ -10,4 +10,4 @@ void shutdown();
 void update(double time);
 void render(const graphics::internal::FrameData& fd);
 
-} // namespace application
+}
