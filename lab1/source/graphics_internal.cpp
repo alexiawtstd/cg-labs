@@ -12,12 +12,12 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4100 4189 4324)
-#endif // _MSC_VER
+#endif
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 #ifdef _MSC_VER
 #pragma warning(pop)
-#endif // _MSC_VER
+#endif
 
 #include <backends/imgui_impl_vulkan.h>
 
@@ -59,7 +59,6 @@ VkCommandPool vk_imgui_command_pool;
 VkCommandBuffer vk_imgui_command_buffer;
 
 VkFormat selectDepthFormat(VkPhysicalDevice physical_device) {
-	// Prefer the original format and preserve stencil support in the fallback.
 	const VkFormat candidates[] = {
 		VK_FORMAT_D24_UNORM_S8_UINT,
 		VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -791,4 +790,4 @@ void submitAndPresent() {
 	}
 }
 
-} // namespace graphics::internal
+}
