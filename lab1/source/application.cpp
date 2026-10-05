@@ -17,15 +17,15 @@ namespace application {
 
 namespace {
 
-// Данные, которые уходят в uniform-буфер (std140: mat4 + vec4 = 80 байт)
+// данные, которые уходят в uniform-буфер (std140: mat4 + vec4 = 80 байт)
 struct ObjectUniforms {
 	float mvp[4][4];
 	float color[4];
 };
 
-// Параметры одного объекта, которыми управляет интерфейс (доп. задания 2, 3, 4)
+// параметры одного объекта, которыми управляет интерфейс (доп. задания 2, 3, 4)
 struct SceneObject {
-	// Параметры из интерфейса
+	// параметры из интерфейса
 	float position[3];
 	float rotation[3]; // градусы, вокруг X, Y, Z
 	float scale[3];
@@ -33,7 +33,7 @@ struct SceneObject {
 	bool animate;      // двигать ли объект по траектории
 	float phase;       // сдвиг по фазе траектории (чтобы объекты не двигались синхронно)
 
-	// Ресурсы Vulkan: у каждого объекта свой uniform-буфер и свой набор дескрипторов
+	// ресурсы Vulkan: у каждого объекта свой uniform-буфер и свой набор дескрипторов
 	// (доп. задание 6)
 	VkBuffer uniform_buffer;
 	VmaAllocation uniform_allocation;
@@ -43,7 +43,7 @@ struct SceneObject {
 
 constexpr int OBJECT_COUNT = 2;
 
-// Значения по умолчанию (используются при запуске и по кнопке Reset)
+// значения по умолчанию (используются при запуске и по кнопке Reset)
 SceneObject makeObject(float x, float s, float phase) {
 	SceneObject o = {};
 	o.position[0] = x;
@@ -56,18 +56,18 @@ SceneObject makeObject(float x, float s, float phase) {
 
 SceneObject objects[OBJECT_COUNT];
 
-// Общие настройки сцены
+// общие настройки сцены
 bool use_perspective = true; // доп. задание 1
 float fov_degrees = 60.0f;
 float camera_distance = 7.0f;
 
-// Настройки анимации (доп. задание 3)
+// настройки анимации (доп. задание 3)
 bool animation_paused = false;
 float animation_speed = 1.0f;
 float trajectory_radius = 1.5f;
 float animation_time = 0.0f;
 
-// Общие объекты Vulkan
+// общие объекты Vulkan
 VkShaderModule vertex_shader;
 VkShaderModule fragment_shader;
 
@@ -81,11 +81,11 @@ VmaAllocation vertex_buffer_allocation;
 VkBuffer index_buffer;
 VmaAllocation index_buffer_allocation;
 
-// Вспомогательные функции
+// вспомогательные функции
 constexpr float DEG_TO_RAD = 3.14159265358979f / 180.0f;
 
-// Ищет файл шейдера в нескольких папках (зависит от того, откуда запущена программа)
-// и создаёт из него шейдерный модуль. name -- например "octahedron.vert.spv".
+// ищет файл шейдера в нескольких папках
+// и создаёт из него шейдерный модуль
 VkShaderModule loadShaderModule(const char name[]) {
 	const char* directories[] = {
 		"shaders/",
@@ -133,8 +133,8 @@ VkShaderModule loadShaderModule(const char name[]) {
 	return result;
 }
 
-// Создаёт буфер в памяти, доступной с CPU, и сразу копирует туда данные (если data != nullptr).
-// Возвращает указатель на отображённую память.
+// создаёт буфер в памяти, доступной с CPU, и сразу копирует туда данные (если data != nullptr).
+// возвращает указатель на отображённую память.
 void* createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, const void* data,
                    VkBuffer& buffer, VmaAllocation& allocation) {
 	auto& context = graphics::internal::context;
@@ -172,14 +172,14 @@ void* createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, const void* data
 bool initialize() {
 	auto& context = graphics::internal::context;
 
-	// Начальные параметры объектов
+	// начальные параметры объектов
 	objects[0] = makeObject(-2.5f, 1.0f, 0.0f);
 	objects[1] = makeObject(+2.5f, 0.7f, 3.14159265f);
 	objects[1].color[0] = 1.0f;
 	objects[1].color[1] = 0.8f;
 	objects[1].color[2] = 0.6f;
 
-	// 1. Шейдеры
+	// шейдеры
 	vertex_shader = loadShaderModule("octahedron.vert.spv");
 	if (!vertex_shader) {
 		std::cerr << "Failed to load vertex shader\n";
@@ -192,7 +192,7 @@ bool initialize() {
 		return false;
 	}
 
-	// 2. Вершинный и индексный буферы (общие для обоих объектов)
+	// вершинный и индексный буферы (общие для обоих объектов)
 	if (!createBuffer(sizeof(octahedron_vertices), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
 	                  octahedron_vertices, vertex_buffer, vertex_buffer_allocation)) {
 		return false;
@@ -203,7 +203,7 @@ bool initialize() {
 		return false;
 	}
 
-	// 3. Uniform-буфер для каждого объекта (размер выровнен до 16 байт)
+	// uniform-буфер для каждого объекта (размер выровнен до 16 байт)
 	for (SceneObject& object : objects) {
 		void* memory = createBuffer((sizeof(ObjectUniforms) + 0xf) & ~0xf,
 		                            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, nullptr,
@@ -214,7 +214,7 @@ bool initialize() {
 		object.uniform_memory = static_cast<ObjectUniforms*>(memory);
 	}
 
-	// 4. Описание набора дескрипторов: один uniform-буфер в binding = 0
+	// описание набора дескрипторов: один uniform-буфер в binding = 0
 	{
 		const VkDescriptorSetLayoutBinding bindings[] = {
 			{
@@ -238,7 +238,7 @@ bool initialize() {
 		}
 	}
 
-	// 5. Пул дескрипторов: на каждый объект по одному набору и по одному uniform-буферу
+	// пул дескрипторов: на каждый объект по одному набору и по одному uniform-буферу
 	{
 		const VkDescriptorPoolSize pool_sizes[] = {
 			{
@@ -260,7 +260,7 @@ bool initialize() {
 		}
 	}
 
-	// 6. Выделяем наборы дескрипторов и привязываем к ним буферы объектов
+	// выделяем наборы дескрипторов и привязываем к ним буферы объектов
 	for (SceneObject& object : objects) {
 		const VkDescriptorSetAllocateInfo allocate_info{
 			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -293,7 +293,7 @@ bool initialize() {
 		vkUpdateDescriptorSets(context.device, 1, &write, 0, nullptr);
 	}
 
-	// 7. Layout конвейера (знает про набор дескрипторов)
+	// layout конвейера
 	{
 		const VkPipelineLayoutCreateInfo info{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -307,7 +307,7 @@ bool initialize() {
 		}
 	}
 
-	// 8. Графический конвейер
+	// графический конвейер
 	{
 		const VkPipelineShaderStageCreateInfo stage_infos[2] = {
 			{
@@ -324,7 +324,7 @@ bool initialize() {
 			},
 		};
 
-		// Откуда брать вершины: один буфер, шаг -- одна структура Vertex
+		// откуда брать вершины
 		const VkVertexInputBindingDescription vertex_bindings[] = {
 			{
 				.binding = 0,
@@ -333,7 +333,7 @@ bool initialize() {
 			},
 		};
 
-		// Атрибуты: location 0 -- позиция, location 1 -- цвет
+		// атрибуты: location 0 - позиция, location 1 - цвет
 		const VkVertexInputAttributeDescription vertex_attributes[] = {
 			{
 				.location = 0,
@@ -368,7 +368,7 @@ bool initialize() {
 			.scissorCount = 1,
 		};
 
-		// Лицевые грани у нас идут против часовой стрелки (см. octahedron.hpp)
+		// лицевые грани у нас идут против часовой стрелки
 		const VkPipelineRasterizationStateCreateInfo raster_info{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
 			.polygonMode = VK_POLYGON_MODE_FILL,
@@ -446,7 +446,7 @@ void shutdown() {
 	vkDestroyPipeline(context.device, pipeline, nullptr);
 	vkDestroyPipelineLayout(context.device, pipeline_layout, nullptr);
 
-	// Наборы дескрипторов освобождаются вместе с пулом
+	// наборы дескрипторов освобождаются вместе с пулом
 	vkDestroyDescriptorPool(context.device, descriptor_pool, nullptr);
 	vkDestroyDescriptorSetLayout(context.device, descriptor_set_layout, nullptr);
 
@@ -465,11 +465,11 @@ void shutdown() {
 void update([[maybe_unused]] double time) {
 	auto& context = graphics::internal::context;
 
-	// Интерфейс
+	// интерфейс
 	ImGui::Begin("Octahedron");
 
 	if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen)) {
-		// Доп. задание 1: переключение проекции
+		// доп. задание 1: переключение проекции
 		if (ImGui::RadioButton("Perspective", use_perspective)) {
 			use_perspective = true;
 		}
@@ -485,7 +485,7 @@ void update([[maybe_unused]] double time) {
 	}
 
 	if (ImGui::CollapsingHeader("Animation", ImGuiTreeNodeFlags_DefaultOpen)) {
-		// Доп. задание 3: пауза, скорость, параметры траектории
+		// доп. задание 3: пауза, скорость, параметры траектории
 		ImGui::Checkbox("Pause", &animation_paused);
 		ImGui::SliderFloat("Speed", &animation_speed, 0.0f, 5.0f);
 		ImGui::SliderFloat("Trajectory radius", &trajectory_radius, 0.0f, 3.0f);
@@ -497,11 +497,11 @@ void update([[maybe_unused]] double time) {
 		ImGui::PushID(i);
 		const char* title = (i == 0) ? "Object 1" : "Object 2";
 		if (ImGui::CollapsingHeader(title, ImGuiTreeNodeFlags_DefaultOpen)) {
-			// Доп. задание 2: позиция, поворот, растяжение
+			// доп. задание 2: позиция, поворот, растяжение
 			ImGui::DragFloat3("Position", object.position, 0.05f);
 			ImGui::SliderFloat3("Rotation (deg)", object.rotation, -180.0f, 180.0f);
 			ImGui::DragFloat3("Scale", object.scale, 0.02f, 0.1f, 5.0f);
-			// Доп. задание 4: цвет
+			// доп. задание 4: цвет
 			ImGui::ColorEdit3("Color", object.color);
 			ImGui::Checkbox("Animate", &object.animate);
 		}
@@ -510,7 +510,7 @@ void update([[maybe_unused]] double time) {
 
 	ImGui::End();
 
-	// Время анимации (копим сами, чтобы работали пауза и смена скорости) ---
+	// время анимации (копим сами, чтобы работали пауза и смена скорости)
 	if (!animation_paused) {
 		animation_time += ImGui::GetIO().DeltaTime * animation_speed;
 	}
@@ -523,12 +523,12 @@ void update([[maybe_unused]] double time) {
 	if (use_perspective) {
 		projection = mat4Perspective(fov_degrees * DEG_TO_RAD, aspect, 0.1f, 100.0f);
 	} else {
-		// Видимая высота такая же, как у перспективной проекции на расстоянии камеры
+		// видимая высота такая же, как у перспективной проекции на расстоянии камеры
 		const float visible_height = 2.0f * camera_distance * std::tan(fov_degrees * DEG_TO_RAD * 0.5f);
 		projection = mat4Ortho(visible_height, aspect, 0.1f, 100.0f);
 	}
 
-	// Камера стоит в (0, 0, camera_distance) и смотрит на начало координат
+	// камера стоит в (0, 0, camera_distance) и смотрит на начало координат
 	const Mat4 view = mat4Translate(0.0f, 0.0f, -camera_distance);
 	const Mat4 view_projection = mat4Mul(projection, view);
 
@@ -541,8 +541,8 @@ void update([[maybe_unused]] double time) {
 		float rz = object.rotation[2] * DEG_TO_RAD;
 
 		if (object.animate) {
-			// Сложная траектория: фигура-«восьмёрка» (кривая Лиссажу) в пространстве
-			// плюс вращение вокруг своих осей.
+			// сложная траектория: восьмёрка (кривая Лиссажу) в пространстве
+			// плюс вращение вокруг своих осей
 			const float t = animation_time + object.phase;
 			x += trajectory_radius * std::cos(t);
 			y += trajectory_radius * 0.5f * std::sin(2.0f * t);
@@ -552,7 +552,7 @@ void update([[maybe_unused]] double time) {
 			ry += t * 1.5f;
 		}
 
-		// Модельная матрица: масштаб -> поворот -> перенос
+		// модельная матрица: масштаб - поворот - перенос
 		const Mat4 rotation = mat4Mul(mat4RotateZ(rz), mat4Mul(mat4RotateY(ry), mat4RotateX(rx)));
 		const Mat4 scale = mat4Scale(object.scale[0], object.scale[1], object.scale[2]);
 		const Mat4 model = mat4Mul(mat4Translate(x, y, z), mat4Mul(rotation, scale));
@@ -619,8 +619,8 @@ void render(const graphics::internal::FrameData& fd) {
 	vkCmdBindVertexBuffers(fd.command_buffer, 0, 1, &vertex_buffer, &vertex_buffer_offset);
 	vkCmdBindIndexBuffer(fd.command_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT32);
 
-	// Один и тот же меш рисуем дважды, меняя только набор дескрипторов
-	// (у каждого объекта свой uniform-буфер -> своя матрица и цвет).
+	// один и тот же меш рисуем дважды, меняя только набор дескрипторов
+	// у каждого объекта свой uniform-буфер - своя матрица и цвет
 	for (const SceneObject& object : objects) {
 		vkCmdBindDescriptorSets(fd.command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
 		                        pipeline_layout, 0, 1, &object.descriptor_set, 0, nullptr);
@@ -633,4 +633,4 @@ void render(const graphics::internal::FrameData& fd) {
 	vkEndCommandBuffer(fd.command_buffer);
 }
 
-} // namespace application
+}
